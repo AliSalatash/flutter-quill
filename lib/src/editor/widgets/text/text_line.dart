@@ -1481,11 +1481,19 @@ class RenderEditableTextLine extends RenderEditableBox {
   bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
     if (_leading != null) {
       final childParentData = _leading!.parentData as BoxParentData;
+      // In RTL the leading is painted mirrored to the end of the line
+      // (see paint()), so hit-testing must use the same mirrored offset,
+      // otherwise checklist checkboxes are not tappable in RTL.
+      // See: https://github.com/singerdmx/flutter-quill/issues/2085
+      final leadingOffset = textDirection == TextDirection.ltr
+          ? childParentData.offset
+          : Offset(
+              size.width - _leading!.size.width, childParentData.offset.dy);
       final isHit = result.addWithPaintOffset(
-        offset: childParentData.offset,
+        offset: leadingOffset,
         position: position,
         hitTest: (result, transformed) {
-          assert(transformed == position - childParentData.offset);
+          assert(transformed == position - leadingOffset);
           return _leading!.hitTest(result, position: transformed);
         },
       );
