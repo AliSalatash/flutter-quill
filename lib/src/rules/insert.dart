@@ -564,6 +564,7 @@ class PreserveInlineStylesRule extends InsertRule {
     len ??= 0;
     var prev = itr.skip(len == 0 ? index : index + 1);
     var excludeLink = false;
+    var excludeCode = false;
 
     /// Process simple insertions at start of line
     if (len == 0) {
@@ -574,10 +575,16 @@ class PreserveInlineStylesRule extends InsertRule {
           currLine.attributes?.containsKey(Attribute.link.key) != true &&
               prev?.attributes?.containsKey(Attribute.link.key) == true;
 
+      /// Inline code (like links) must not extend past its run or line.
+      excludeCode = currLine.attributes?.containsKey(Attribute.inlineCode.key) !=
+              true &&
+          prev?.attributes?.containsKey(Attribute.inlineCode.key) == true;
+
       /// Trap for previous is not text
       if (prev?.data is! String) {
         prev = currLine;
         excludeLink = true;
+        excludeCode = true;
       } else {
         final prevData = prev!.data as String;
         if (prevData.endsWith('\n')) {
@@ -592,13 +599,16 @@ class PreserveInlineStylesRule extends InsertRule {
               /// Prevent link attribute from propagating over line break
               if (back != null &&
                   back.data is String &&
-                  back.attributes?.containsKey(Attribute.link.key) != true) {
+                  back.attributes?.containsKey(Attribute.link.key) != true &&
+                  back.attributes?.containsKey(Attribute.inlineCode.key) !=
+                      true) {
                 prev = back;
               }
             }
           } else {
             prev = currLine;
             excludeLink = true;
+            excludeCode = true;
           }
         }
       }
@@ -618,6 +628,9 @@ class PreserveInlineStylesRule extends InsertRule {
 
     if (excludeLink) {
       attributes.remove(Attribute.link.key);
+    }
+    if (excludeCode) {
+      attributes.remove(Attribute.inlineCode.key);
     }
     return Delta()
       ..retain(index + len)
