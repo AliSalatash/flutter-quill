@@ -114,6 +114,13 @@ class PreserveBlockStyleOnInsertRule extends InsertRule {
       resetStyle.addAll(Attribute.header.toJson());
     }
 
+    // A newline inserted after a checked list item must start unchecked
+    // (matching quill.js): reset the original newline, which now terminates
+    // the newly created line, from `checked` to `unchecked`.
+    if (lineStyle.attributes[Attribute.list.key] == Attribute.checked) {
+      resetStyle.addAll(Attribute.unchecked.toJson());
+    }
+
     // Go over each inserted line and ensure block style is applied.
     final lines = data.split('\n');
     final delta = Delta()..retain(index + (len ?? 0));
