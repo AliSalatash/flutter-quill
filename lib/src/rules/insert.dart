@@ -632,6 +632,15 @@ class PreserveInlineStylesRule extends InsertRule {
     if (excludeCode) {
       attributes.remove(Attribute.inlineCode.key);
     }
+
+    /// Never inherit "clicky" attributes (links, inline code) across a line
+    /// boundary, no matter which path chose [prev] — a newline styled with
+    /// them would otherwise poison every following line.
+    if (prev?.data is String && (prev!.data as String).endsWith('
+')) {
+      attributes.remove(Attribute.link.key);
+      attributes.remove(Attribute.inlineCode.key);
+    }
     return Delta()
       ..retain(index + len)
       ..insert(data, attributes.isEmpty ? null : attributes);
