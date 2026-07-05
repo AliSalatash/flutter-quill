@@ -175,6 +175,7 @@ class EditableTextBlock extends StatelessWidget {
     var index = 0;
     for (final line in Iterable.castFrom<dynamic, Line>(block.children)) {
       index++;
+      final nodeTextDirection = getDirectionOfNode(line, textDirection);
       final editableTextLine = EditableTextLine(
           line,
           _buildLeading(
@@ -186,7 +187,7 @@ class EditableTextBlock extends StatelessWidget {
           ),
           TextLine(
             line: line,
-            textDirection: textDirection,
+            textDirection: nodeTextDirection,
             embedBuilder: embedBuilder,
             textSpanBuilder: textSpanBuilder,
             customStyleBuilder: customStyleBuilder,
@@ -201,7 +202,7 @@ class EditableTextBlock extends StatelessWidget {
           ),
           indentWidthBuilder(block, context, count, numberPointWidthBuilder),
           _getSpacingForLine(line, index, count, defaultStyles),
-          textDirection,
+          nodeTextDirection,
           textSelection,
           color,
           enableInteractiveSelection,
@@ -210,7 +211,6 @@ class EditableTextBlock extends StatelessWidget {
           cursorCont,
           styles!.inlineCode!,
           null);
-      final nodeTextDirection = getDirectionOfNode(line, textDirection);
       children.add(
         Directionality(
           textDirection: nodeTextDirection,

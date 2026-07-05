@@ -94,6 +94,28 @@ int getPositionDelta(Delta user, Delta actual) {
   return diff;
 }
 
+/// First strong direction of [text]: Latin letters are LTR, Arabic-script
+/// and Hebrew are RTL. Digits are bidi-weak and skipped, but text with only
+/// digits/neutrals lays out LTR (numbers read left-to-right either way).
+TextDirection? firstStrongDirection(String text) {
+  var hasDigit = false;
+  for (final c in text.codeUnits) {
+    if (c >= 0x41 && c <= 0x5A || c >= 0x61 && c <= 0x7A) {
+      return TextDirection.ltr;
+    }
+    if (c >= 0x0590 && c <= 0x08FF ||
+        c >= 0xFB1D && c <= 0xFDFF ||
+        c >= 0xFE70 && c <= 0xFEFF) {
+      return TextDirection.rtl;
+    }
+    hasDigit = hasDigit ||
+        c >= 0x30 && c <= 0x39 ||
+        c >= 0x660 && c <= 0x669 ||
+        c >= 0x6F0 && c <= 0x6F9;
+  }
+  return hasDigit ? TextDirection.ltr : null;
+}
+
 TextDirection getDirectionOfNode(Node node, [TextDirection? currentDirection]) {
   final direction = node.style.attributes[Attribute.direction.key];
   // If it is RTL, then create the opposite direction
@@ -102,5 +124,10 @@ TextDirection getDirectionOfNode(Node node, [TextDirection? currentDirection]) {
   } else if (direction == Attribute.rtl) {
     return TextDirection.rtl;
   }
-  return currentDirection ?? TextDirection.ltr;
+  // No explicit direction attribute: infer from the first strong character,
+  // so English/number-only lines lay out LTR inside an RTL app (and the
+  // other way around), like most chat apps do.
+  return firstStrongDirection(node.toPlainText()) ??
+      currentDirection ??
+      TextDirection.ltr;
 }

@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 
+import '../../../delta/delta_diff.dart';
+import '../../../document/nodes/block.dart';
 import '../../../document/nodes/node.dart';
 import '../../editor.dart';
 import 'magnifier.dart';
@@ -531,6 +533,24 @@ class _TextSelectionHandleOverlayState
     widget.onSelectionHandleTapped?.call();
   }
 
+  /// Direction of the line under [position] (mirrors getDirectionOfNode's
+  /// inference), so the handle pair is mirrored per line: an LTR line inside
+  /// an RTL editor gets LTR-style handles and anchors, and vice versa.
+  TextDirection _directionAt(TextPosition position) {
+    try {
+      var node = widget.renderObject.container
+          .queryChild(position.offset, false)
+          .node;
+      if (node is Block) {
+        node = node.queryChild(position.offset - node.offset, false).node;
+      }
+      if (node != null) {
+        return getDirectionOfNode(node, widget.renderObject.textDirection);
+      }
+    } catch (_) {}
+    return widget.renderObject.textDirection;
+  }
+
   @override
   Widget build(BuildContext context) {
     late LayerLink layerLink;
@@ -540,7 +560,7 @@ class _TextSelectionHandleOverlayState
       case _TextSelectionHandlePosition.start:
         layerLink = widget.startHandleLayerLink;
         type = _chooseType(
-          widget.renderObject.textDirection,
+          _directionAt(widget.selection.base),
           TextSelectionHandleType.left,
           TextSelectionHandleType.right,
         );
@@ -550,7 +570,7 @@ class _TextSelectionHandleOverlayState
         assert(!widget.selection.isCollapsed);
         layerLink = widget.endHandleLayerLink;
         type = _chooseType(
-          widget.renderObject.textDirection,
+          _directionAt(widget.selection.extent),
           TextSelectionHandleType.right,
           TextSelectionHandleType.left,
         );

@@ -429,6 +429,7 @@ class _QuillEditorSelectionGestureDetectorBuilder
 
   @override
   void onSingleLongTapMoveUpdate(LongPressMoveUpdateDetails details) {
+    _state.dragOffsetNotifier?.value = details.globalPosition;
     if (_state.config.onSingleLongTapMoveUpdate != null) {
       if (renderEditor != null &&
           _state.config.onSingleLongTapMoveUpdate!(
@@ -589,6 +590,9 @@ class _QuillEditorSelectionGestureDetectorBuilder
 
   @override
   void onSingleLongTapStart(LongPressStartDetails details) {
+    // Feed the magnifier during long-press selection (it previously only
+    // followed the selection-handle drags).
+    _state.dragOffsetNotifier?.value = details.globalPosition;
     if (_state.config.onSingleLongTapStart != null) {
       if (renderEditor != null &&
           _state.config.onSingleLongTapStart!(
@@ -614,6 +618,7 @@ class _QuillEditorSelectionGestureDetectorBuilder
 
   @override
   void onSingleLongTapEnd(LongPressEndDetails details) {
+    _state.dragOffsetNotifier?.value = null;
     if (_state.config.onSingleLongTapEnd != null) {
       if (renderEditor != null) {
         if (_state.config.onSingleLongTapEnd!(
