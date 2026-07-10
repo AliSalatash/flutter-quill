@@ -277,7 +277,10 @@ class _TextLineState extends State<TextLine> {
     } else if (alignment == Attribute.justifyAlignment) {
       return TextAlign.justify;
     }
-    return TextAlign.start;
+    // Yaddasht patch: justify by default so wrapped (multi-line) paragraphs
+    // fill the width on both edges. Single lines and the last line of a
+    // paragraph render as start-aligned anyway, so nothing looks stretched.
+    return TextAlign.justify;
   }
 
   InlineSpan _buildTextSpan(
