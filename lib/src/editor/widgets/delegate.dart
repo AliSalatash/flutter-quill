@@ -90,7 +90,14 @@ class EditorTextSelectionGestureDetectorBuilder {
   /// If mouse is used, the toolbar should only show when right click.
   /// Else, it should show when the selection is enabled.
   bool checkSelectionToolbarShouldShow({required bool isAdditionalAction}) {
-    if (kind != PointerDeviceKind.mouse) {
+    // Yaddasht patch: on desktop a null kind means the gesture started before
+    // any tap-down recorded it (a fast first drag / long-press drag in a
+    // freshly opened editor) — that's a mouse, not a finger. Without this,
+    // the very FIRST selection in a fresh note pops the toolbar (kind is
+    // still null and shouldShowSelectionToolbar defaults to true).
+    final mouseLike =
+        kind == PointerDeviceKind.mouse || (isDesktop && kind == null);
+    if (!mouseLike) {
       return shouldShowSelectionToolbar;
     }
     return shouldShowSelectionToolbar && isAdditionalAction;
