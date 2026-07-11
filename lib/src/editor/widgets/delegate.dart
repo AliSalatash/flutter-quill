@@ -288,6 +288,10 @@ class EditorTextSelectionGestureDetectorBuilder {
   void onDoubleTapDown(TapDownDetails details) {
     if (delegate.selectionEnabled) {
       renderEditor!.selectWord(SelectionChangedCause.tap);
+      // Yaddasht patch: double-CLICK (mouse) selects the word without popping
+      // the toolbar, matching standard desktop editors; right-click still
+      // opens the menu. Touch double-tap keeps the toolbar.
+      if (details.kind == PointerDeviceKind.mouse) return;
       // allow the selection to get updated before trying to bring up
       // toolbars.
       //
@@ -345,6 +349,10 @@ class EditorTextSelectionGestureDetectorBuilder {
   @protected
   void onDragSelectionEnd(DragEndDetails details) {
     renderEditor!.handleDragEnd(details);
+    // Yaddasht patch: no auto toolbar after MOUSE drag-select (standard
+    // desktop behavior — the menu stays available via right-click). Touch
+    // and stylus keep the toolbar.
+    if (kind == PointerDeviceKind.mouse) return;
     if (isDesktop &&
         delegate.selectionEnabled &&
         checkSelectionToolbarShouldShow(isAdditionalAction: false)) {
